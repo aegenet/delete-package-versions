@@ -57,7 +57,8 @@ export class Input {
     return !!(
       this.owner &&
       this.packageName &&
-      this.numOldVersionsToDelete >= 0 &&
+      (this.numOldVersionsToDelete === -1 ||
+        this.numOldVersionsToDelete >= 0) &&
       this.token
     )
   }

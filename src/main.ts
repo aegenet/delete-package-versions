@@ -1,9 +1,7 @@
 import {getInput, setFailed} from '@actions/core'
 import {context} from '@actions/github'
 import {Input} from './input'
-import {Observable, throwError} from 'rxjs'
 import {deleteVersions} from './delete'
-import {catchError} from 'rxjs/operators'
 
 function getActionInput(): Input {
   return new Input({
@@ -26,21 +24,14 @@ function getActionInput(): Input {
   })
 }
 
-function run(): Observable<boolean> {
+async function run(): Promise<void> {
   try {
-    return deleteVersions(getActionInput()).pipe(
-      catchError(err => throwError(err))
-    )
+    await deleteVersions(getActionInput())
   } catch (error) {
     if (error instanceof Error) {
-      return throwError(error.message)
+      setFailed(error.message)
     }
-    return throwError(error)
   }
 }
 
-run().subscribe({
-  error: err => {
-    setFailed(err)
-  }
-})
+run()

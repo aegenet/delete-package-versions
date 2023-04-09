@@ -1,35 +1,33 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+import * as assert from 'node:assert'
 import {rest} from 'msw'
 import {setupServer} from 'msw/node'
-import {Input, InputParams} from '../src/input'
-import {deleteVersions, finalIds, RATE_LIMIT} from '../src/delete'
+import {Input, InputParams} from './input'
+import {deleteVersions, finalIds, RATE_LIMIT} from './delete'
 import {getMockedVersionsResponse} from './version/rest.mock'
-import {RestEndpointMethodTypes} from '@octokit/plugin-rest-endpoint-methods/dist-types/generated/parameters-and-response-types'
-
-type GetVersionsResponseData =
-  RestEndpointMethodTypes['packages']['getAllPackageVersionsForPackageOwnedByUser']['response']['data']
 
 describe('index tests -- call rest', () => {
   let server = setupServer()
 
-  beforeEach(() => {
+  before(() => {
     server = setupServer()
     server.listen()
   })
 
-  afterEach(() => {
+  after(() => {
     server.close()
   })
 
-  it('finalIds test - supplied package version id', done => {
+  it('finalIds test - supplied package version id', async () => {
     const suppliedIds = ['123', '456', '789']
-    finalIds(getInput({packageVersionIds: suppliedIds})).subscribe(ids => {
-      expect(ids).toStrictEqual(suppliedIds)
-      done()
-    })
+    const ids = await finalIds(getInput({packageVersionIds: suppliedIds}))
+    assert.deepStrictEqual(
+      ids,
+      suppliedIds.map(f => parseInt(f, 10))
+    )
+    console.log('ok')
   })
 
-  it('finalIDs test - success', done => {
+  it('finalIDs test - success', async () => {
     const numVersions = 10
     let apiCalled = 0
 
@@ -38,24 +36,22 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           return res(ctx.status(200), ctx.json(versions))
         }
       )
     )
 
-    finalIds(getInput()).subscribe(ids => {
-      expect(apiCalled).toBe(1)
-      expect(ids.length).toBe(numVersions)
-      for (let i = 0; i < numVersions; i++) {
-        expect(ids[i]).toBe(versions[i].id.toString())
-      }
-      done()
-    })
+    const ids = await finalIds(getInput())
+    assert.strictEqual(apiCalled, 1)
+    assert.strictEqual(ids.length, numVersions)
+    for (let i = 0; i < numVersions; i++) {
+      assert.strictEqual(ids[i], versions[i].id)
+    }
   })
 
-  it('finalIDs test - success - GHES', done => {
+  it('finalIDs test - success - GHES', async () => {
     process.env.GITHUB_API_URL = 'https://github.someghesinstance.com/api/v3'
 
     const numVersions = 10
@@ -66,26 +62,24 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://github.someghesinstance.com/api/v3/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           return res(ctx.status(200), ctx.json(versions))
         }
       )
     )
 
-    finalIds(getInput()).subscribe(ids => {
-      expect(apiCalled).toBe(1)
-      expect(ids.length).toBe(numVersions)
-      for (let i = 0; i < numVersions; i++) {
-        expect(ids[i]).toBe(versions[i].id.toString())
-      }
+    const ids = await finalIds(getInput())
+    assert.strictEqual(apiCalled, 1)
+    assert.strictEqual(ids.length, numVersions)
+    for (let i = 0; i < numVersions; i++) {
+      assert.strictEqual(ids[i], versions[i].id)
+    }
 
-      delete process.env.GITHUB_API_URL
-      done()
-    })
+    delete process.env.GITHUB_API_URL
   })
 
-  it('finalIDs test - success - pagination', done => {
+  it('finalIDs test - success - pagination', async () => {
     const numVersions = RATE_LIMIT * 2
     let apiCalled = 0
 
@@ -97,7 +91,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           const page = req.url.searchParams.get('page')
           if (page === '1') {
@@ -111,18 +105,16 @@ describe('index tests -- call rest', () => {
       )
     )
 
-    finalIds(getInput()).subscribe(ids => {
-      expect(apiCalled).toBe(3) // 2 full pages + 1 empty page
-      // never returns more than RATE_LIMIT versions
-      expect(ids.length).toBe(RATE_LIMIT)
-      for (let i = 0; i < RATE_LIMIT; i++) {
-        expect(ids[i]).toBe(versions[i].id.toString())
-      }
-      done()
-    })
+    const ids = await finalIds(getInput())
+    assert.strictEqual(apiCalled, 3) // 2 full pages + 1 empty page
+    // never returns more than RATE_LIMIT versions
+    assert.strictEqual(ids.length, 200)
+    for (let i = 0; i < ids.length; i++) {
+      assert.strictEqual(ids[i], versions[i].id)
+    }
   })
 
-  it('finalIDs test - success - sorting accross pages', done => {
+  it('finalIDs test - success - sorting accross pages', async () => {
     const numVersions = RATE_LIMIT * 2
     let apiCalled = 0
 
@@ -136,7 +128,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           const page = req.url.searchParams.get('page')
           if (page === '1') {
@@ -150,17 +142,15 @@ describe('index tests -- call rest', () => {
       )
     )
 
-    finalIds(getInput()).subscribe(ids => {
-      expect(apiCalled).toBe(3) // 2 full pages + 1 empty page
-      expect(ids.length).toBe(RATE_LIMIT)
-      for (let i = 0; i < RATE_LIMIT; i++) {
-        expect(ids[i]).toBe(versions[i].id.toString())
-      }
-      done()
-    })
+    const ids = await finalIds(getInput())
+    assert.strictEqual(apiCalled, 3) // 2 full pages + 1 empty page
+    assert.strictEqual(ids.length, versions.length)
+    for (let i = 0; i < ids.length; i++) {
+      assert.strictEqual(ids[i], versions[i].id)
+    }
   })
 
-  it('finalIds test - do not delete more than numOldVersionsToDelete', done => {
+  it('finalIds test - do not delete more than numOldVersionsToDelete', async () => {
     const numVersions = 50
     let apiCalled = 0
 
@@ -169,7 +159,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           return res(ctx.status(200), ctx.json(versions))
         }
@@ -178,17 +168,15 @@ describe('index tests -- call rest', () => {
 
     const numOldVersionsToDelete = 10
 
-    finalIds(getInput({numOldVersionsToDelete})).subscribe(ids => {
-      expect(apiCalled).toBe(1)
-      expect(ids.length).toBe(numOldVersionsToDelete)
-      for (let i = 0; i < numOldVersionsToDelete; i++) {
-        expect(ids[i]).toBe(versions[i].id.toString())
-      }
-      done()
-    })
+    const ids = await finalIds(getInput({numOldVersionsToDelete}))
+    assert.strictEqual(apiCalled, 1)
+    assert.strictEqual(ids.length, numOldVersionsToDelete)
+    for (let i = 0; i < numOldVersionsToDelete; i++) {
+      assert.strictEqual(ids[i], versions[i].id)
+    }
   })
 
-  it('finalIds test - keep minVersionsToKeep', done => {
+  it('finalIds test - keep minVersionsToKeep', async () => {
     const numVersions = 50
     let apiCalled = 0
 
@@ -197,7 +185,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           return res(ctx.status(200), ctx.json(versions))
         }
@@ -206,17 +194,15 @@ describe('index tests -- call rest', () => {
 
     const minVersionsToKeep = 10
 
-    finalIds(getInput({minVersionsToKeep})).subscribe(ids => {
-      expect(apiCalled).toBe(1)
-      expect(ids.length).toBe(numVersions - minVersionsToKeep)
-      for (let i = 0; i < numVersions - minVersionsToKeep; i++) {
-        expect(ids[i]).toBe(versions[i].id.toString())
-      }
-      done()
-    })
+    const ids = await finalIds(getInput({minVersionsToKeep}))
+    assert.strictEqual(apiCalled, 1)
+    assert.strictEqual(ids.length, numVersions - minVersionsToKeep)
+    for (let i = 0; i < numVersions - minVersionsToKeep; i++) {
+      assert.strictEqual(ids[i], versions[i].id)
+    }
   })
 
-  it('finalIds test - delete only prerelease versions with minVersionsToKeep', done => {
+  it('finalIds test - delete only prerelease versions with minVersionsToKeep', async () => {
     const numVersions = 50
     let apiCalled = 0
 
@@ -231,7 +217,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           return res(ctx.status(200), ctx.json(versions))
         }
@@ -240,22 +226,56 @@ describe('index tests -- call rest', () => {
 
     const toDelete = numVersions / 2 - 10
 
-    finalIds(
+    const ids = await finalIds(
       getInput({
         ignoreVersions: RegExp('^(0|[1-9]\\d*)((\\.(0|[1-9]\\d*))*)$'),
         minVersionsToKeep: 10
       })
-    ).subscribe(ids => {
-      expect(apiCalled).toBe(1)
-      expect(ids.length).toBe(toDelete)
-      for (let i = 0; i < toDelete; i++) {
-        expect(ids[i]).toBe(versions[i * 2].id.toString())
-      }
-      done()
-    })
+    )
+    assert.strictEqual(apiCalled, 1)
+    assert.strictEqual(ids.length, toDelete)
+    for (let i = 0; i < toDelete; i++) {
+      assert.strictEqual(ids[i], versions[i * 2].id)
+    }
   })
 
-  it('finalIds test - delete only untagged versions with minVersionsToKeep', done => {
+  it('finalIds test - delete only not ignoreVersions with minVersionsToKeep', async () => {
+    const numVersions = 50
+    let apiCalled = 0
+
+    const versions = getMockedVersionsResponse(numVersions)
+    // make half versions 999
+    for (let i = 0; i < numVersions; i++) {
+      versions[i].name = `999.${i}.${i * 2}`
+    }
+    versions[1].name = `1.2.3`
+
+    server.use(
+      rest.get(
+        'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
+        async (req, res, ctx) => {
+          apiCalled++
+          return res(ctx.status(200), ctx.json(versions))
+        }
+      )
+    )
+
+    const toDelete = numVersions - 6 // 5 keep and one untouchable
+
+    const ids = await finalIds(
+      getInput({
+        ignoreVersions: RegExp('^(?:(?!999)\\d+)\\.\\d+\\.\\d+$'),
+        minVersionsToKeep: 5
+      })
+    )
+    assert.strictEqual(apiCalled, 1)
+    assert.strictEqual(ids.length, toDelete)
+    for (let i = 0; i < toDelete; i++) {
+      assert.strictEqual(ids[i], i > 0 ? versions[i + 1].id : versions[i].id)
+    }
+  })
+
+  it('finalIds test - delete only untagged versions with minVersionsToKeep', async () => {
     const numVersions = 50
     const numTaggedVersions = 20
     const numUntaggedVersions = numVersions - numTaggedVersions
@@ -279,30 +299,28 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/container/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           return res(ctx.status(200), ctx.json(versions))
         }
       )
     )
 
-    finalIds(
+    const ids = await finalIds(
       getInput({
         minVersionsToKeep: 10,
         deleteUntaggedVersions: 'true',
         packageType: 'container'
       })
-    ).subscribe(ids => {
-      expect(apiCalled).toBe(1)
-      expect(ids.length).toBe(numUntaggedVersions - 10)
-      for (let i = 0; i < numUntaggedVersions - 10; i++) {
-        expect(ids[i]).toBe(untaggedVersions[i].id.toString())
-      }
-      done()
-    })
+    )
+    assert.strictEqual(apiCalled, 1)
+    assert.strictEqual(ids.length, numUntaggedVersions - 10)
+    for (let i = 0; i < numUntaggedVersions - 10; i++) {
+      assert.strictEqual(ids[i], untaggedVersions[i].id)
+    }
   })
 
-  it('finalIds test - no versions deleted if API error even once', done => {
+  it('finalIds test - no versions deleted if API error even once', async () => {
     const numVersions = RATE_LIMIT * 2
     let apiCalled = 0
 
@@ -314,13 +332,13 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           apiCalled++
           const page = req.url.searchParams.get('page')
           if (page === '1') {
             return res(ctx.status(200), ctx.json(firstPage))
           } else if (page === '2') {
-            return res(ctx.status(500), ctx.json([]))
+            return res(ctx.status(500), ctx.json(secondPage))
           } else {
             return res(ctx.status(200), ctx.json([]))
           }
@@ -328,57 +346,49 @@ describe('index tests -- call rest', () => {
       )
     )
 
-    finalIds(getInput()).subscribe(
-      () => {
-        done.fail('should not complete')
-      },
-      err => {
-        expect(apiCalled).toBe(2) // 1 full page + 1 error page
-        expect(err).toBeTruthy()
-        expect(err).toContain('get versions API failed.')
-        done()
-      }
-    )
+    try {
+      await finalIds(getInput())
+      throw new Error('should not complete')
+    } catch (err) {
+      assert.strictEqual(apiCalled, 2) // 1 full page + 1 error page
+      assert.ok(err)
+      assert.ok((err as Error).message.includes('get versions API failed.'))
+    }
   })
 
-  it('deleteVersions test - missing token', done => {
-    deleteVersions(getInput({token: ''})).subscribe({
-      error: err => {
-        expect(err).toBeTruthy()
-        done()
-      },
-      complete: async () => done.fail('no error thrown')
-    })
+  it('deleteVersions test - missing token', async () => {
+    try {
+      await deleteVersions(getInput({token: ''}))
+      assert.fail('no error thrown')
+    } catch (err) {
+      assert.ok(err)
+    }
   })
 
-  it('deleteVersions test - missing packageName', done => {
-    deleteVersions(getInput({packageName: ''})).subscribe({
-      error: err => {
-        expect(err).toBeTruthy()
-        done()
-      },
-      complete: async () => done.fail('no error thrown')
-    })
+  it('deleteVersions test - missing packageName', async () => {
+    try {
+      await deleteVersions(getInput({packageName: ''}))
+      throw new Error('no error thrown')
+    } catch (err) {
+      assert.ok(err)
+    }
   })
 
-  it('deleteVersions test - missing packageType', done => {
-    deleteVersions(getInput({packageType: ''})).subscribe({
-      error: err => {
-        expect(err).toBeTruthy()
-        done()
-      },
-      complete: async () => done.fail('no error thrown')
-    })
+  it('deleteVersions test - missing packageType', async () => {
+    try {
+      await deleteVersions(getInput({packageType: ''}))
+      throw new Error('no error thrown')
+    } catch (err) {
+      assert.ok(err)
+    }
   })
 
-  it('deleteVersions test - zero numOldVersionsToDelete', done => {
-    deleteVersions(getInput({numOldVersionsToDelete: 0})).subscribe(result => {
-      expect(result).toBe(true)
-      done()
-    })
+  it('deleteVersions test - zero numOldVersionsToDelete', async () => {
+    const result = await deleteVersions(getInput({numOldVersionsToDelete: 0}))
+    assert.strictEqual(result, true)
   })
 
-  it('deleteVersions test - success complete flow', done => {
+  it('deleteVersions test - success complete flow', async () => {
     const numVersions = 10
     let getApiCalled = 0
     let deleteApiCalled = 0
@@ -389,7 +399,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           getApiCalled++
           return res(ctx.status(200), ctx.json(versions))
         }
@@ -399,7 +409,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.delete(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions/:versionId',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           deleteApiCalled++
           versionsDeleted.push(req.params.versionId as string)
           return res(ctx.status(204))
@@ -407,21 +417,17 @@ describe('index tests -- call rest', () => {
       )
     )
 
-    deleteVersions(getInput())
-      .subscribe(result => {
-        expect(result).toBe(true)
-      })
-      .add(() => {
-        expect(getApiCalled).toBe(1)
-        expect(deleteApiCalled).toBe(numVersions)
-        for (let i = 0; i < numVersions; i++) {
-          expect(versionsDeleted[i]).toBe(versions[i].id.toString())
-        }
-        done()
-      })
+    const result = await deleteVersions(getInput())
+    assert.strictEqual(result, true)
+
+    assert.strictEqual(getApiCalled, 1)
+    assert.strictEqual(deleteApiCalled, numVersions)
+    for (let i = 0; i < numVersions; i++) {
+      assert.strictEqual(versionsDeleted[i], versions[i].id.toString())
+    }
   })
 
-  it('deleteVersions test - success complete flow - GHES', done => {
+  it('deleteVersions test - success complete flow - GHES', async () => {
     process.env.GITHUB_API_URL = 'https://github.someghesinstance.com/api/v3'
 
     const numVersions = 10
@@ -434,7 +440,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.get(
         'https://github.someghesinstance.com/api/v3/users/test-owner/packages/npm/test-package/versions',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           getApiCalled++
           return res(ctx.status(200), ctx.json(versions))
         }
@@ -444,7 +450,7 @@ describe('index tests -- call rest', () => {
     server.use(
       rest.delete(
         'https://github.someghesinstance.com/api/v3/users/test-owner/packages/npm/test-package/versions/:versionId',
-        (req, res, ctx) => {
+        async (req, res, ctx) => {
           deleteApiCalled++
           versionsDeleted.push(req.params.versionId as string)
           return res(ctx.status(204))
@@ -452,20 +458,16 @@ describe('index tests -- call rest', () => {
       )
     )
 
-    deleteVersions(getInput())
-      .subscribe(result => {
-        expect(result).toBe(true)
-      })
-      .add(() => {
-        expect(getApiCalled).toBe(1)
-        expect(deleteApiCalled).toBe(numVersions)
-        for (let i = 0; i < numVersions; i++) {
-          expect(versionsDeleted[i]).toBe(versions[i].id.toString())
-        }
+    const result = await deleteVersions(getInput())
+    assert.strictEqual(result, true)
 
-        delete process.env.GITHUB_API_URL
-        done()
-      })
+    assert.strictEqual(getApiCalled, 1)
+    assert.strictEqual(deleteApiCalled, numVersions)
+    for (let i = 0; i < numVersions; i++) {
+      assert.strictEqual(versionsDeleted[i], versions[i].id.toString())
+    }
+
+    delete process.env.GITHUB_API_URL
   })
 })
 
@@ -474,7 +476,7 @@ const defaultInput: InputParams = {
   owner: 'test-owner',
   packageName: 'test-package',
   packageType: 'npm',
-  numOldVersionsToDelete: RATE_LIMIT,
+  numOldVersionsToDelete: -1,
   minVersionsToKeep: -1,
   ignoreVersions: RegExp('^$'),
   token: 'test-token'
