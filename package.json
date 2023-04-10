@@ -1,5 +1,5 @@
 {
-  "name": "@aegenet/delete-package-versions",
+  "name": "@aegenet/gh-delete-package-versions",
   "version": "0.0.0",
   "private": true,
   "description": "TypeScript template action",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:aegenet/delete-package-versions.git"
+    "url": "git@github.com:aegenet/gh-delete-package-versions.git"
   },
   "keywords": [
     "actions",
