@@ -7,8 +7,10 @@ export interface InputParams {
   minVersionsToKeep?: number
   ignoreVersions?: RegExp
   token?: string
-  deletePreReleaseVersions?: string
-  deleteUntaggedVersions?: string
+  deletePreReleaseVersions?: boolean
+  deleteUntaggedVersions?: boolean
+  verbose?: boolean
+  simulate?: boolean
 }
 
 const defaultParams = {
@@ -19,9 +21,11 @@ const defaultParams = {
   numOldVersionsToDelete: 0,
   minVersionsToKeep: 0,
   ignoreVersions: new RegExp(''),
-  deletePreReleaseVersions: '',
+  deletePreReleaseVersions: false,
   token: '',
-  deleteUntaggedVersions: ''
+  deleteUntaggedVersions: false,
+  verbose: false,
+  simulate: false
 }
 
 export class Input {
@@ -32,10 +36,12 @@ export class Input {
   numOldVersionsToDelete: number
   minVersionsToKeep: number
   ignoreVersions: RegExp
-  deletePreReleaseVersions: string
+  deletePreReleaseVersions: boolean
   token: string
   numDeleted: number
-  deleteUntaggedVersions: string
+  deleteUntaggedVersions: boolean
+  verbose: boolean
+  simulate: boolean
 
   constructor(params?: InputParams) {
     const validatedParams: Required<InputParams> = {...defaultParams, ...params}
@@ -51,6 +57,8 @@ export class Input {
     this.token = validatedParams.token
     this.numDeleted = 0
     this.deleteUntaggedVersions = validatedParams.deleteUntaggedVersions
+    this.verbose = validatedParams.verbose
+    this.simulate = validatedParams.simulate
   }
 
   hasOldestVersionQueryInfo(): boolean {
@@ -65,14 +73,14 @@ export class Input {
 
   checkInput(): boolean {
     if (this.packageType.toLowerCase() !== 'container') {
-      this.deleteUntaggedVersions = 'false'
+      this.deleteUntaggedVersions = false
     }
 
     if (
       this.numOldVersionsToDelete > 1 &&
       (this.minVersionsToKeep >= 0 ||
-        this.deletePreReleaseVersions === 'true' ||
-        this.deleteUntaggedVersions === 'true')
+        this.deletePreReleaseVersions ||
+        this.deleteUntaggedVersions)
     ) {
       return false
     }
@@ -81,13 +89,13 @@ export class Input {
       return false
     }
 
-    if (this.deletePreReleaseVersions === 'true') {
+    if (this.deletePreReleaseVersions) {
       this.minVersionsToKeep =
         this.minVersionsToKeep > 0 ? this.minVersionsToKeep : 0
       this.ignoreVersions = new RegExp('^(0|[1-9]\\d*)((\\.(0|[1-9]\\d*))*)$')
     }
 
-    if (this.deleteUntaggedVersions === 'true') {
+    if (this.deleteUntaggedVersions) {
       this.minVersionsToKeep =
         this.minVersionsToKeep > 0 ? this.minVersionsToKeep : 0
     }

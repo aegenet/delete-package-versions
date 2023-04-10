@@ -61,6 +61,14 @@ export async function finalIds(input: Input): Promise<number[]> {
       input.token
     )
 
+    if (input.verbose) {
+      console.log(
+        `${versionsIds.length} versions ids: ${versionsIds
+          .map(f => `[${f.id}] ${f.version}`)
+          .join(', ')}`
+      )
+    }
+
     /* 
       Here first filter out the versions that are to be ignored.
       Then compute number of versions to delete (toDelete) based on the inputs.
@@ -68,6 +76,14 @@ export async function finalIds(input: Input): Promise<number[]> {
     versionsIds = versionsIds.filter(
       info => !input.ignoreVersions.test(info.version)
     )
+
+    if (input.verbose) {
+      console.log(
+        `${versionsIds.length} versions ids after filter (${
+          input.ignoreVersions
+        }): ${versionsIds.map(f => `[${f.id}] ${f.version}`).join(', ')}`
+      )
+    }
 
     // We need to delete oldest versions
     versionsIds.sort((a, b) => {
@@ -77,7 +93,7 @@ export async function finalIds(input: Input): Promise<number[]> {
       return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     })
 
-    if (input.deleteUntaggedVersions === 'true') {
+    if (input.deleteUntaggedVersions) {
       versionsIds = versionsIds.filter(info => !info.tagged)
     }
 
@@ -103,6 +119,8 @@ export async function finalIds(input: Input): Promise<number[]> {
 }
 
 export async function deleteVersions(input: Input): Promise<boolean> {
+  console.log(`Deleting versions for package ${input.packageName}...`)
+
   if (!input.token) {
     throw new Error('No token found')
   }
@@ -120,11 +138,19 @@ export async function deleteVersions(input: Input): Promise<boolean> {
 
   const deletedIds = await finalIds(input)
 
-  return await deletePackageVersions(
-    deletedIds,
-    input.owner,
-    input.packageName,
-    input.packageType,
-    input.token
-  )
+  if (input.verbose) {
+    console.log(`IDs to be deleted: ${deletedIds.join(', ')}`)
+  }
+
+  if (!input.simulate) {
+    return await deletePackageVersions(
+      deletedIds,
+      input.owner,
+      input.packageName,
+      input.packageType,
+      input.token
+    )
+  } else {
+    return true
+  }
 }

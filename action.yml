@@ -78,6 +78,17 @@ inputs:
     required: false
     default: ${{ github.token }}
 
+  verbose:
+    description: >
+      Display the deleted package versions and the list of preserved versions.
+    required: false
+    default: "false"
+
+  simulate:
+    description: >
+      Does not actually delete data, allows for simulation only.
+    required: false
+    default: "false"
 runs:
   using: node16
   main: dist/index.js

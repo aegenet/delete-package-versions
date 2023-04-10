@@ -309,7 +309,7 @@ describe('index tests -- call rest', () => {
     const ids = await finalIds(
       getInput({
         minVersionsToKeep: 10,
-        deleteUntaggedVersions: 'true',
+        deleteUntaggedVersions: true,
         packageType: 'container'
       })
     )
