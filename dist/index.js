@@ -43,7 +43,7 @@ exports.getVersionIds = getVersionIds;
 function finalIds(input) {
     return __awaiter(this, void 0, void 0, function* () {
         if (input.packageVersionIds.length > 0) {
-            return input.packageVersionIds.map(f => parseInt(f, 10));
+            return input.packageVersionIds;
         }
         if (input.hasOldestVersionQueryInfo()) {
             let versionsIds = yield getVersionIds(input.owner, input.packageName, input.packageType, exports.RATE_LIMIT, 1, input.token);
@@ -53,12 +53,27 @@ function finalIds(input) {
                     .join(', ')}`);
             }
             /*
+              Only included versions
+            */
+            if (input.includeVersions) {
+                versionsIds = versionsIds.filter(info => 
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                input.includeVersions.test(info.version));
+                if (input.verbose) {
+                    console.log(`${versionsIds.length} versions ids after includeVersions (${input.includeVersions}): ${versionsIds.map(f => `[${f.id}] ${f.version}`).join(', ')}`);
+                }
+            }
+            /*
               Here first filter out the versions that are to be ignored.
               Then compute number of versions to delete (toDelete) based on the inputs.
             */
-            versionsIds = versionsIds.filter(info => !input.ignoreVersions.test(info.version));
-            if (input.verbose) {
-                console.log(`${versionsIds.length} versions ids after filter (${input.ignoreVersions}): ${versionsIds.map(f => `[${f.id}] ${f.version}`).join(', ')}`);
+            if (input.ignoreVersions) {
+                versionsIds = versionsIds.filter(
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                info => !input.ignoreVersions.test(info.version));
+                if (input.verbose) {
+                    console.log(`${versionsIds.length} versions ids after ignoreVersions (${input.ignoreVersions}): ${versionsIds.map(f => `[${f.id}] ${f.version}`).join(', ')}`);
+                }
             }
             // We need to delete oldest versions
             versionsIds.sort((a, b) => {
@@ -82,7 +97,13 @@ function finalIds(input) {
             if (toDelete <= 0) {
                 return [];
             }
-            return versionsIds.map(info => info.id).slice(0, toDelete);
+            versionsIds = versionsIds.slice(0, toDelete);
+            if (input.verbose) {
+                console.log(`${versionsIds.length} versions ids to be deleted: ${versionsIds
+                    .map(f => `[${f.id}] ${f.version}`)
+                    .join(', ')}`);
+            }
+            return versionsIds.map(info => info.id);
         }
         throw new Error("Could not get packageVersionIds. Explicitly specify using the 'package-version-ids' input");
     });
@@ -133,6 +154,7 @@ const defaultParams = {
     numOldVersionsToDelete: 0,
     minVersionsToKeep: 0,
     ignoreVersions: new RegExp(''),
+    includeVersions: null,
     deletePreReleaseVersions: false,
     token: '',
     deleteUntaggedVersions: false,
@@ -149,6 +171,7 @@ class Input {
         this.numOldVersionsToDelete = validatedParams.numOldVersionsToDelete;
         this.minVersionsToKeep = validatedParams.minVersionsToKeep;
         this.ignoreVersions = validatedParams.ignoreVersions;
+        this.includeVersions = validatedParams.includeVersions;
         this.deletePreReleaseVersions = validatedParams.deletePreReleaseVersions;
         this.token = validatedParams.token;
         this.numDeleted = 0;
@@ -219,16 +242,23 @@ const delete_1 = __nccwpck_require__(9645);
 /** Don't flood github api */
 exports.PACKAGE_SLEEP_MS = 15000;
 function getActionInput(packageName) {
+    const includeVersions = (0, core_1.getInput)('include-versions');
+    const ignoreVersions = (0, core_1.getInput)('ignore-versions');
     return new input_1.Input({
         packageVersionIds: (0, core_1.getInput)('package-version-ids')
-            ? (0, core_1.getInput)('package-version-ids').split(',')
+            ? (0, core_1.getInput)('package-version-ids')
+                .split(',')
+                .map(f => parseInt(f, 10))
             : [],
         owner: (0, core_1.getInput)('owner') ? (0, core_1.getInput)('owner') : github_1.context.repo.owner,
         packageName,
         packageType: (0, core_1.getInput)('package-type'),
         numOldVersionsToDelete: parseInt((0, core_1.getInput)('num-old-versions-to-delete'), 10),
         minVersionsToKeep: parseInt((0, core_1.getInput)('min-versions-to-keep'), 10),
-        ignoreVersions: new RegExp((0, core_1.getInput)('ignore-versions')),
+        ignoreVersions: ignoreVersions
+            ? new RegExp((0, core_1.getInput)('ignore-versions'))
+            : null,
+        includeVersions: includeVersions ? new RegExp(includeVersions) : null,
         deletePreReleaseVersions: toBoolean((0, core_1.getInput)('delete-only-pre-release-versions')),
         token: (0, core_1.getInput)('token'),
         deleteUntaggedVersions: toBoolean((0, core_1.getInput)('delete-only-untagged-versions')),

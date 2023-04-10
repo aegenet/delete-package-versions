@@ -1,11 +1,12 @@
 export interface InputParams {
-  packageVersionIds?: string[]
+  packageVersionIds?: number[]
   owner?: string
   packageName?: string
   packageType?: string
   numOldVersionsToDelete?: number
   minVersionsToKeep?: number
-  ignoreVersions?: RegExp
+  ignoreVersions?: RegExp | null
+  includeVersions?: RegExp | null
   token?: string
   deletePreReleaseVersions?: boolean
   deleteUntaggedVersions?: boolean
@@ -21,6 +22,7 @@ const defaultParams = {
   numOldVersionsToDelete: 0,
   minVersionsToKeep: 0,
   ignoreVersions: new RegExp(''),
+  includeVersions: null,
   deletePreReleaseVersions: false,
   token: '',
   deleteUntaggedVersions: false,
@@ -29,13 +31,14 @@ const defaultParams = {
 }
 
 export class Input {
-  packageVersionIds: string[]
+  packageVersionIds: number[]
   owner: string
   packageName: string
   packageType: string
   numOldVersionsToDelete: number
   minVersionsToKeep: number
-  ignoreVersions: RegExp
+  ignoreVersions: RegExp | null
+  includeVersions: RegExp | null
   deletePreReleaseVersions: boolean
   token: string
   numDeleted: number
@@ -53,6 +56,7 @@ export class Input {
     this.numOldVersionsToDelete = validatedParams.numOldVersionsToDelete
     this.minVersionsToKeep = validatedParams.minVersionsToKeep
     this.ignoreVersions = validatedParams.ignoreVersions
+    this.includeVersions = validatedParams.includeVersions
     this.deletePreReleaseVersions = validatedParams.deletePreReleaseVersions
     this.token = validatedParams.token
     this.numDeleted = 0

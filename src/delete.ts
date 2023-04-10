@@ -48,7 +48,7 @@ export async function getVersionIds(
 
 export async function finalIds(input: Input): Promise<number[]> {
   if (input.packageVersionIds.length > 0) {
-    return input.packageVersionIds.map(f => parseInt(f, 10))
+    return input.packageVersionIds
   }
 
   if (input.hasOldestVersionQueryInfo()) {
@@ -70,19 +70,40 @@ export async function finalIds(input: Input): Promise<number[]> {
     }
 
     /* 
+      Only included versions
+    */
+    if (input.includeVersions) {
+      versionsIds = versionsIds.filter(info =>
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        input.includeVersions!.test(info.version)
+      )
+
+      if (input.verbose) {
+        console.log(
+          `${versionsIds.length} versions ids after includeVersions (${
+            input.includeVersions
+          }): ${versionsIds.map(f => `[${f.id}] ${f.version}`).join(', ')}`
+        )
+      }
+    }
+
+    /* 
       Here first filter out the versions that are to be ignored.
       Then compute number of versions to delete (toDelete) based on the inputs.
     */
-    versionsIds = versionsIds.filter(
-      info => !input.ignoreVersions.test(info.version)
-    )
-
-    if (input.verbose) {
-      console.log(
-        `${versionsIds.length} versions ids after filter (${
-          input.ignoreVersions
-        }): ${versionsIds.map(f => `[${f.id}] ${f.version}`).join(', ')}`
+    if (input.ignoreVersions) {
+      versionsIds = versionsIds.filter(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        info => !input.ignoreVersions!.test(info.version)
       )
+
+      if (input.verbose) {
+        console.log(
+          `${versionsIds.length} versions ids after ignoreVersions (${
+            input.ignoreVersions
+          }): ${versionsIds.map(f => `[${f.id}] ${f.version}`).join(', ')}`
+        )
+      }
     }
 
     // We need to delete oldest versions
@@ -110,7 +131,17 @@ export async function finalIds(input: Input): Promise<number[]> {
       return []
     }
 
-    return versionsIds.map(info => info.id).slice(0, toDelete)
+    versionsIds = versionsIds.slice(0, toDelete)
+
+    if (input.verbose) {
+      console.log(
+        `${versionsIds.length} versions ids to be deleted: ${versionsIds
+          .map(f => `[${f.id}] ${f.version}`)
+          .join(', ')}`
+      )
+    }
+
+    return versionsIds.map(info => info.id)
   }
 
   throw new Error(

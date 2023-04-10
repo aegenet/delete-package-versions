@@ -50,7 +50,14 @@ inputs:
       Regex pattern for package versions to ignore.
       Defaults to delete all versions.
     required: false
-    default: "^$"
+    default: ""
+
+  include-versions:
+    description: >
+      Regex pattern for package versions to include.
+      Defaults to include all versions.
+    required: false
+    default: ""
 
   delete-only-pre-release-versions:
     description: >

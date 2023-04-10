@@ -7,9 +7,14 @@ import {deleteVersions, sleep} from './delete'
 export const PACKAGE_SLEEP_MS = 15000
 
 function getActionInput(packageName: string): Input {
+  const includeVersions = getInput('include-versions')
+  const ignoreVersions = getInput('ignore-versions')
+
   return new Input({
     packageVersionIds: getInput('package-version-ids')
-      ? getInput('package-version-ids').split(',')
+      ? getInput('package-version-ids')
+          .split(',')
+          .map(f => parseInt(f, 10))
       : [],
     owner: getInput('owner') ? getInput('owner') : context.repo.owner,
     packageName,
@@ -19,7 +24,10 @@ function getActionInput(packageName: string): Input {
       10
     ),
     minVersionsToKeep: parseInt(getInput('min-versions-to-keep'), 10),
-    ignoreVersions: new RegExp(getInput('ignore-versions')),
+    ignoreVersions: ignoreVersions
+      ? new RegExp(getInput('ignore-versions'))
+      : null,
+    includeVersions: includeVersions ? new RegExp(includeVersions) : null,
     deletePreReleaseVersions: toBoolean(
       getInput('delete-only-pre-release-versions')
     ),
