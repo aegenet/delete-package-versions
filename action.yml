@@ -20,6 +20,11 @@ inputs:
       Name of the package containing the version to delete.
     required: true
 
+  package-names:
+    description: >
+      Comma separated string of package names containing the version to delete.
+    required: false
+
   package-type:
     description: >
       Type of package. Can be one of container, maven, npm, nuget, or rubygems.

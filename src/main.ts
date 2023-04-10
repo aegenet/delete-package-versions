@@ -1,15 +1,18 @@
 import {getInput, setFailed} from '@actions/core'
 import {context} from '@actions/github'
 import {Input} from './input'
-import {deleteVersions} from './delete'
+import {deleteVersions, sleep} from './delete'
 
-function getActionInput(): Input {
+/** Don't flood github api */
+export const PACKAGE_SLEEP_MS = 15000
+
+function getActionInput(packageName: string): Input {
   return new Input({
     packageVersionIds: getInput('package-version-ids')
       ? getInput('package-version-ids').split(',')
       : [],
     owner: getInput('owner') ? getInput('owner') : context.repo.owner,
-    packageName: getInput('package-name'),
+    packageName,
     packageType: getInput('package-type'),
     numOldVersionsToDelete: Number(getInput('num-old-versions-to-delete')),
     minVersionsToKeep: Number(getInput('min-versions-to-keep')),
@@ -26,7 +29,23 @@ function getActionInput(): Input {
 
 async function run(): Promise<void> {
   try {
-    await deleteVersions(getActionInput())
+    const packageNames = getInput('package-names')
+      ? getInput('package-names')
+          .split(',')
+          .map(f => String(f).trim())
+          .filter(f => f)
+      : []
+
+    if (packageNames.length) {
+      for (let i = 0; i < packageNames.length; i++) {
+        await deleteVersions(getActionInput(packageNames[i]))
+        // Anti flood
+        sleep(PACKAGE_SLEEP_MS)
+      }
+    } else {
+      // Standard
+      await deleteVersions(getActionInput(getInput('package-name')))
+    }
   } catch (error) {
     if (error instanceof Error) {
       setFailed(error.message)
