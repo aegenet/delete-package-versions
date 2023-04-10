@@ -52,3 +52,14 @@ jobs:
         simulate: true
         min-versions-to-keep: 5
         ignore-versions: '^(?!999)(\d+)\.(\d+)\.(\d+)$'
+
+    - uses: ./
+      name: Include version
+      with:
+        owner: 'creadigme'
+        package-name: 'au-i18n-audit'
+        package-type: 'npm'
+        verbose: true
+        simulate: true
+        min-versions-to-keep: 5
+        include-versions: '^999\.'

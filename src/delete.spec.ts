@@ -18,12 +18,9 @@ describe('index tests -- call rest', () => {
   })
 
   it('finalIds test - supplied package version id', async () => {
-    const suppliedIds = ['123', '456', '789']
+    const suppliedIds = [123, 456, 789]
     const ids = await finalIds(getInput({packageVersionIds: suppliedIds}))
-    assert.deepStrictEqual(
-      ids,
-      suppliedIds.map(f => parseInt(f, 10))
-    )
+    assert.deepStrictEqual(ids, suppliedIds)
     console.log('ok')
   })
 
@@ -265,6 +262,42 @@ describe('index tests -- call rest', () => {
     const ids = await finalIds(
       getInput({
         ignoreVersions: RegExp('^(?:(?!999)\\d+)\\.\\d+\\.\\d+$'),
+        minVersionsToKeep: 5
+      })
+    )
+    assert.strictEqual(apiCalled, 1)
+    assert.strictEqual(ids.length, toDelete)
+    for (let i = 0; i < toDelete; i++) {
+      assert.strictEqual(ids[i], i > 0 ? versions[i + 1].id : versions[i].id)
+    }
+  })
+
+  it('finalIds test - delete only includeVersions with minVersionsToKeep', async () => {
+    const numVersions = 50
+    let apiCalled = 0
+
+    const versions = getMockedVersionsResponse(numVersions)
+    // make half versions 999
+    for (let i = 0; i < numVersions; i++) {
+      versions[i].name = `999.${i}.${i * 2}`
+    }
+    versions[1].name = `1.2.3`
+
+    server.use(
+      rest.get(
+        'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
+        async (req, res, ctx) => {
+          apiCalled++
+          return res(ctx.status(200), ctx.json(versions))
+        }
+      )
+    )
+
+    const toDelete = numVersions - 6 // 5 keep and one untouchable
+
+    const ids = await finalIds(
+      getInput({
+        includeVersions: RegExp('^999\\.'),
         minVersionsToKeep: 5
       })
     )
