@@ -31,8 +31,11 @@ This is a fork of https://github.com/actions/delete-package-versions.
   owner:
 
   # Name of the package.
-  # Required
   package-name:
+
+  # Comma separated string of package names containing the version to delete.
+  # Alternative to package-name
+  package-names:
 
   # Type of the package. Can be one of container, maven, npm, nuget, or rubygems.
   # Required

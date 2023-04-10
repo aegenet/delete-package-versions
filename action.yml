@@ -18,7 +18,12 @@ inputs:
   package-name:
     description: >
       Name of the package containing the version to delete.
-    required: true
+    required: false
+
+  package-names:
+    description: >
+      Comma separated string of package names containing the version to delete.
+    required: false
 
   package-type:
     description: >
