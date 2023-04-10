@@ -47,11 +47,19 @@ function finalIds(input) {
         }
         if (input.hasOldestVersionQueryInfo()) {
             let versionsIds = yield getVersionIds(input.owner, input.packageName, input.packageType, exports.RATE_LIMIT, 1, input.token);
+            if (input.verbose) {
+                console.log(`${versionsIds.length} versions ids: ${versionsIds
+                    .map(f => `[${f.id}] ${f.version}`)
+                    .join(', ')}`);
+            }
             /*
               Here first filter out the versions that are to be ignored.
               Then compute number of versions to delete (toDelete) based on the inputs.
             */
             versionsIds = versionsIds.filter(info => !input.ignoreVersions.test(info.version));
+            if (input.verbose) {
+                console.log(`${versionsIds.length} versions ids after filter (${input.ignoreVersions}): ${versionsIds.map(f => `[${f.id}] ${f.version}`).join(', ')}`);
+            }
             // We need to delete oldest versions
             versionsIds.sort((a, b) => {
                 if (a.created_at === b.created_at) {
@@ -59,7 +67,7 @@ function finalIds(input) {
                 }
                 return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
             });
-            if (input.deleteUntaggedVersions === 'true') {
+            if (input.deleteUntaggedVersions) {
                 versionsIds = versionsIds.filter(info => !info.tagged);
             }
             let toDelete = versionsIds.length;
@@ -82,6 +90,7 @@ function finalIds(input) {
 exports.finalIds = finalIds;
 function deleteVersions(input) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log(`Deleting versions for package ${input.packageName}...`);
         if (!input.token) {
             throw new Error('No token found');
         }
@@ -93,7 +102,15 @@ function deleteVersions(input) {
             return true;
         }
         const deletedIds = yield finalIds(input);
-        return yield (0, version_1.deletePackageVersions)(deletedIds, input.owner, input.packageName, input.packageType, input.token);
+        if (input.verbose) {
+            console.log(`IDs to be deleted: ${deletedIds.join(', ')}`);
+        }
+        if (!input.simulate) {
+            return yield (0, version_1.deletePackageVersions)(deletedIds, input.owner, input.packageName, input.packageType, input.token);
+        }
+        else {
+            return true;
+        }
     });
 }
 exports.deleteVersions = deleteVersions;
@@ -116,9 +133,11 @@ const defaultParams = {
     numOldVersionsToDelete: 0,
     minVersionsToKeep: 0,
     ignoreVersions: new RegExp(''),
-    deletePreReleaseVersions: '',
+    deletePreReleaseVersions: false,
     token: '',
-    deleteUntaggedVersions: ''
+    deleteUntaggedVersions: false,
+    verbose: false,
+    simulate: false
 };
 class Input {
     constructor(params) {
@@ -134,6 +153,8 @@ class Input {
         this.token = validatedParams.token;
         this.numDeleted = 0;
         this.deleteUntaggedVersions = validatedParams.deleteUntaggedVersions;
+        this.verbose = validatedParams.verbose;
+        this.simulate = validatedParams.simulate;
     }
     hasOldestVersionQueryInfo() {
         return !!(this.owner &&
@@ -144,23 +165,23 @@ class Input {
     }
     checkInput() {
         if (this.packageType.toLowerCase() !== 'container') {
-            this.deleteUntaggedVersions = 'false';
+            this.deleteUntaggedVersions = false;
         }
         if (this.numOldVersionsToDelete > 1 &&
             (this.minVersionsToKeep >= 0 ||
-                this.deletePreReleaseVersions === 'true' ||
-                this.deleteUntaggedVersions === 'true')) {
+                this.deletePreReleaseVersions ||
+                this.deleteUntaggedVersions)) {
             return false;
         }
         if (this.packageType === '' || this.packageName === '') {
             return false;
         }
-        if (this.deletePreReleaseVersions === 'true') {
+        if (this.deletePreReleaseVersions) {
             this.minVersionsToKeep =
                 this.minVersionsToKeep > 0 ? this.minVersionsToKeep : 0;
             this.ignoreVersions = new RegExp('^(0|[1-9]\\d*)((\\.(0|[1-9]\\d*))*)$');
         }
-        if (this.deleteUntaggedVersions === 'true') {
+        if (this.deleteUntaggedVersions) {
             this.minVersionsToKeep =
                 this.minVersionsToKeep > 0 ? this.minVersionsToKeep : 0;
         }
@@ -205,13 +226,19 @@ function getActionInput(packageName) {
         owner: (0, core_1.getInput)('owner') ? (0, core_1.getInput)('owner') : github_1.context.repo.owner,
         packageName,
         packageType: (0, core_1.getInput)('package-type'),
-        numOldVersionsToDelete: Number((0, core_1.getInput)('num-old-versions-to-delete')),
-        minVersionsToKeep: Number((0, core_1.getInput)('min-versions-to-keep')),
-        ignoreVersions: RegExp((0, core_1.getInput)('ignore-versions')),
-        deletePreReleaseVersions: (0, core_1.getInput)('delete-only-pre-release-versions').toLowerCase(),
+        numOldVersionsToDelete: parseInt((0, core_1.getInput)('num-old-versions-to-delete'), 10),
+        minVersionsToKeep: parseInt((0, core_1.getInput)('min-versions-to-keep'), 10),
+        ignoreVersions: new RegExp((0, core_1.getInput)('ignore-versions')),
+        deletePreReleaseVersions: toBoolean((0, core_1.getInput)('delete-only-pre-release-versions')),
         token: (0, core_1.getInput)('token'),
-        deleteUntaggedVersions: (0, core_1.getInput)('delete-only-untagged-versions').toLowerCase()
+        deleteUntaggedVersions: toBoolean((0, core_1.getInput)('delete-only-untagged-versions')),
+        verbose: toBoolean((0, core_1.getInput)('verbose')),
+        simulate: toBoolean((0, core_1.getInput)('simulate'))
     });
+}
+function toBoolean(str) {
+    str = str === null || str === void 0 ? void 0 : str.trim().toLowerCase();
+    return str === 'true' || str === '1';
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {

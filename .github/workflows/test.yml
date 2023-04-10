@@ -45,6 +45,10 @@ jobs:
     - uses: ./
       name: Multiple package names
       with:
-        package-names: 'action-ci-test-package, action-ci-test-package'
+        owner: 'creadigme'
+        package-name: 'au-i18n-audit'
         package-type: 'npm'
-        num-old-versions-to-delete: 0
+        verbose: true
+        simulate: true
+        min-versions-to-keep: 5
+        ignore-versions: '^(?!999)(\d+)\.(\d+)\.(\d+)$'

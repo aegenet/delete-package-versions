@@ -14,17 +14,27 @@ function getActionInput(packageName: string): Input {
     owner: getInput('owner') ? getInput('owner') : context.repo.owner,
     packageName,
     packageType: getInput('package-type'),
-    numOldVersionsToDelete: Number(getInput('num-old-versions-to-delete')),
-    minVersionsToKeep: Number(getInput('min-versions-to-keep')),
-    ignoreVersions: RegExp(getInput('ignore-versions')),
-    deletePreReleaseVersions: getInput(
-      'delete-only-pre-release-versions'
-    ).toLowerCase(),
+    numOldVersionsToDelete: parseInt(
+      getInput('num-old-versions-to-delete'),
+      10
+    ),
+    minVersionsToKeep: parseInt(getInput('min-versions-to-keep'), 10),
+    ignoreVersions: new RegExp(getInput('ignore-versions')),
+    deletePreReleaseVersions: toBoolean(
+      getInput('delete-only-pre-release-versions')
+    ),
     token: getInput('token'),
-    deleteUntaggedVersions: getInput(
-      'delete-only-untagged-versions'
-    ).toLowerCase()
+    deleteUntaggedVersions: toBoolean(
+      getInput('delete-only-untagged-versions')
+    ),
+    verbose: toBoolean(getInput('verbose')),
+    simulate: toBoolean(getInput('simulate'))
   })
+}
+
+function toBoolean(str?: string): boolean {
+  str = str?.trim().toLowerCase()
+  return str === 'true' || str === '1'
 }
 
 async function run(): Promise<void> {
