@@ -41,3 +41,10 @@ jobs:
         package-name: 'action-ci-test-package'
         package-type: 'npm'
         num-old-versions-to-delete: 0
+
+    - uses: ./
+      name: Multiple package names
+      with:
+        package-names: 'action-ci-test-package, action-ci-test-package'
+        package-type: 'npm'
+        num-old-versions-to-delete: 0

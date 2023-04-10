@@ -11,7 +11,8 @@
     "lint-check": "eslint src/**/*.ts",
     "test": "ts-mocha --timeout 15000 -p tsconfig.json src/**/*.spec.ts",
     "build": "npm run format-check && npm run lint-check && npm run test && tsc",
-    "pack": "rm -rf ./lib ./dist && npm run build && ncc build"
+    "pack": "rimraf ./lib ./dist && npm run build && ncc build",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -37,10 +38,12 @@
     "@vercel/ncc": "^0.36.1",
     "eslint": "^8.37.0",
     "eslint-plugin-github": "^4.7.0",
+    "husky": "^8.0.3",
     "js-yaml": "^4.1.0",
     "mocha": "^10.2.0",
     "msw": "^1.2.1",
     "prettier": "^2.8.7",
+    "rimraf": "^5.0.0",
     "ts-jest": "^29.1.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.0.3"
