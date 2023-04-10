@@ -29,6 +29,7 @@ function getActionInput(packageName: string): Input {
 
 async function run(): Promise<void> {
   try {
+    const packageName = getInput('package-name')
     const packageNames = getInput('package-names')
       ? getInput('package-names')
           .split(',')
@@ -42,9 +43,11 @@ async function run(): Promise<void> {
         // Anti flood
         sleep(PACKAGE_SLEEP_MS)
       }
-    } else {
+    } else if (packageName) {
       // Standard
-      await deleteVersions(getActionInput(getInput('package-name')))
+      await deleteVersions(getActionInput(packageName))
+    } else {
+      throw new Error('package-name or package-names is mandatory')
     }
   } catch (error) {
     if (error instanceof Error) {
