@@ -2,7 +2,7 @@
   "name": "@aegenet/gh-delete-package-versions",
   "version": "0.0.0",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "GitHub Delete Package Versions",
   "main": "lib/main.js",
   "scripts": {
     "format": "prettier --write **/*.ts",
@@ -26,26 +26,26 @@
   "author": "YourNameOrOrganization",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.10.0",
-    "@actions/github": "^5.1.1",
-    "@octokit/rest": "^19.0.7"
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "@octokit/rest": "^20.0.2"
   },
   "devDependencies": {
     "@types/expect": "^24.3.0",
-    "@types/mocha": "^10.0.1",
+    "@types/mocha": "^10.0.6",
     "@types/node": "^18.15.11",
-    "@typescript-eslint/parser": "^5.57.1",
-    "@vercel/ncc": "^0.36.1",
-    "eslint": "^8.37.0",
-    "eslint-plugin-github": "^4.7.0",
+    "@typescript-eslint/parser": "^6.18.1",
+    "@vercel/ncc": "^0.38.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-github": "^4.10.1",
     "husky": "^8.0.3",
     "js-yaml": "^4.1.0",
     "mocha": "^10.2.0",
-    "msw": "^1.2.1",
-    "prettier": "^2.8.7",
-    "rimraf": "^5.0.0",
-    "ts-jest": "^29.1.0",
+    "msw": "^2.0.14",
+    "prettier": "^3.2.2",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.1",
     "ts-mocha": "^10.0.0",
-    "typescript": "^5.0.3"
+    "typescript": "^5.3.3"
   }
 }

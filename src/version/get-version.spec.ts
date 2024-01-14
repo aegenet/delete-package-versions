@@ -1,4 +1,4 @@
-import {rest} from 'msw'
+import {HttpResponse, http} from 'msw'
 import {setupServer} from 'msw/node'
 import * as assert from 'node:assert'
 import {getOldestVersions as _getOldestVersions, RestQueryInfo} from '.'
@@ -22,10 +22,15 @@ describe('get versions tests -- mock rest', () => {
     const resp = getMockedVersionsResponse(numVersions)
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
-          return res(ctx.status(200), ctx.json(resp))
+        async () => {
+          return new HttpResponse(JSON.stringify(resp), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -49,10 +54,15 @@ describe('get versions tests -- mock rest', () => {
     process.env.GITHUB_API_URL = 'https://github.someghesinstance.com/api/v3'
 
     server.use(
-      rest.get(
+      http.get(
         'https://github.someghesinstance.com/api/v3/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
-          return res(ctx.status(200), ctx.json(resp))
+        async () => {
+          return new HttpResponse(JSON.stringify(resp), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -90,10 +100,15 @@ describe('get versions tests -- mock rest', () => {
     const resp = respTagged.concat(respUntagged)
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/container/test-package/versions',
-        async (req, res, ctx) => {
-          return res(ctx.status(200), ctx.json(resp))
+        async () => {
+          return new HttpResponse(JSON.stringify(resp), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -121,12 +136,17 @@ describe('get versions tests -- mock rest', () => {
     const numVersions = 5
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
-          return res(
-            ctx.status(200),
-            ctx.json(getMockedVersionsResponse(numVersions))
+        async () => {
+          return new HttpResponse(
+            JSON.stringify(getMockedVersionsResponse(numVersions)),
+            {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }
           )
         }
       )
@@ -139,10 +159,12 @@ describe('get versions tests -- mock rest', () => {
 
   it('getOldestVersions -- API error', async () => {
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
-          return res(ctx.status(500))
+        async () => {
+          return new HttpResponse(null, {
+            status: 500
+          })
         }
       )
     )

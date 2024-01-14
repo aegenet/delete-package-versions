@@ -1,4 +1,4 @@
-import {rest} from 'msw'
+import {HttpResponse, http} from 'msw'
 import {setupServer} from 'msw/node'
 import {deletePackageVersion, deletePackageVersions} from './delete-version'
 import * as assert from 'node:assert'
@@ -17,10 +17,12 @@ describe('delete tests - mock rest', () => {
 
   it('deletePackageVersion', async () => {
     server.use(
-      rest.delete(
+      http.delete(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions/123',
-        async (req, res, ctx) => {
-          return res(ctx.status(204))
+        async () => {
+          return new HttpResponse(null, {
+            status: 204
+          })
         }
       )
     )
@@ -37,10 +39,12 @@ describe('delete tests - mock rest', () => {
 
   it('deletePackageVersions', async () => {
     server.use(
-      rest.delete(
+      http.delete(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions/*',
-        async (req, res, ctx) => {
-          return res(ctx.status(204))
+        async () => {
+          return new HttpResponse(null, {
+            status: 204
+          })
         }
       )
     )
@@ -60,10 +64,12 @@ describe('delete tests - mock rest', () => {
     process.env.GITHUB_API_URL = 'https://github.someghesinstance.com/api/v3'
 
     server.use(
-      rest.delete(
+      http.delete(
         'https://github.someghesinstance.com/api/v3/users/test-owner/packages/npm/test-package/versions/*',
-        async (req, res, ctx) => {
-          return res(ctx.status(204))
+        async () => {
+          return new HttpResponse(null, {
+            status: 204
+          })
         }
       )
     )
@@ -82,10 +88,12 @@ describe('delete tests - mock rest', () => {
 
   it('deletePackageVersion - API error', async () => {
     server.use(
-      rest.delete(
+      http.delete(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions/123',
-        async (req, res, ctx) => {
-          return res(ctx.status(500))
+        async () => {
+          return new HttpResponse(null, {
+            status: 500
+          })
         }
       )
     )
@@ -107,13 +115,17 @@ describe('delete tests - mock rest', () => {
 
   it('deletePackageVersions - API error for some versions', async () => {
     server.use(
-      rest.delete(
+      http.delete(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions/:versionId',
-        async (req, res, ctx) => {
-          if (req.params.versionId === '456') {
-            return res(ctx.status(500))
+        async ({params}) => {
+          if (params.versionId === '456') {
+            return new HttpResponse(null, {
+              status: 500
+            })
           }
-          return res(ctx.status(204))
+          return new HttpResponse(null, {
+            status: 204
+          })
         }
       )
     )

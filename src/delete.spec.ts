@@ -1,5 +1,5 @@
 import * as assert from 'node:assert'
-import {rest} from 'msw'
+import {HttpResponse, http} from 'msw'
 import {setupServer} from 'msw/node'
 import {Input, InputParams} from './input'
 import {deleteVersions, finalIds, RATE_LIMIT} from './delete'
@@ -31,11 +31,16 @@ describe('index tests -- call rest', () => {
     const versions = getMockedVersionsResponse(numVersions)
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           apiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -57,11 +62,16 @@ describe('index tests -- call rest', () => {
     const versions = getMockedVersionsResponse(numVersions)
 
     server.use(
-      rest.get(
+      http.get(
         'https://github.someghesinstance.com/api/v3/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           apiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -86,17 +96,33 @@ describe('index tests -- call rest', () => {
     const secondPage = versions.slice(RATE_LIMIT)
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async ({request}) => {
           apiCalled++
-          const page = req.url.searchParams.get('page')
+          const url = new URL(request.url)
+          const page = url.searchParams.get('page')
           if (page === '1') {
-            return res(ctx.status(200), ctx.json(firstPage))
+            return new HttpResponse(JSON.stringify(firstPage), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           } else if (page === '2') {
-            return res(ctx.status(200), ctx.json(secondPage))
+            return new HttpResponse(JSON.stringify(secondPage), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           } else {
-            return res(ctx.status(200), ctx.json([]))
+            return new HttpResponse(JSON.stringify([]), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           }
         }
       )
@@ -123,17 +149,33 @@ describe('index tests -- call rest', () => {
     const secondPage = versions.slice(0, RATE_LIMIT).reverse()
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async ({request}) => {
           apiCalled++
-          const page = req.url.searchParams.get('page')
+          const url = new URL(request.url)
+          const page = url.searchParams.get('page')
           if (page === '1') {
-            return res(ctx.status(200), ctx.json(firstPage))
+            return new HttpResponse(JSON.stringify(firstPage), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           } else if (page === '2') {
-            return res(ctx.status(200), ctx.json(secondPage))
+            return new HttpResponse(JSON.stringify(secondPage), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           } else {
-            return res(ctx.status(200), ctx.json([]))
+            return new HttpResponse(JSON.stringify([]), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           }
         }
       )
@@ -154,11 +196,16 @@ describe('index tests -- call rest', () => {
     const versions = getMockedVersionsResponse(numVersions)
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           apiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -180,11 +227,16 @@ describe('index tests -- call rest', () => {
     const versions = getMockedVersionsResponse(numVersions)
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           apiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -212,11 +264,16 @@ describe('index tests -- call rest', () => {
     }
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           apiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -248,11 +305,16 @@ describe('index tests -- call rest', () => {
     versions[1].name = `1.2.3`
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           apiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -284,11 +346,16 @@ describe('index tests -- call rest', () => {
     versions[1].name = `1.2.3`
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           apiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -330,11 +397,16 @@ describe('index tests -- call rest', () => {
     let apiCalled = 0
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/container/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           apiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
@@ -363,17 +435,33 @@ describe('index tests -- call rest', () => {
     const secondPage = versions.slice(RATE_LIMIT)
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async ({request}) => {
           apiCalled++
-          const page = req.url.searchParams.get('page')
+          const url = new URL(request.url)
+          const page = url.searchParams.get('page')
           if (page === '1') {
-            return res(ctx.status(200), ctx.json(firstPage))
+            return new HttpResponse(JSON.stringify(firstPage), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           } else if (page === '2') {
-            return res(ctx.status(500), ctx.json(secondPage))
+            return new HttpResponse(JSON.stringify(secondPage), {
+              status: 500,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           } else {
-            return res(ctx.status(200), ctx.json([]))
+            return new HttpResponse(JSON.stringify([]), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           }
         }
       )
@@ -430,22 +518,29 @@ describe('index tests -- call rest', () => {
     const versionsDeleted: string[] = []
 
     server.use(
-      rest.get(
+      http.get(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           getApiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
 
     server.use(
-      rest.delete(
+      http.delete(
         'https://api.github.com/users/test-owner/packages/npm/test-package/versions/:versionId',
-        async (req, res, ctx) => {
+        async ({params}) => {
           deleteApiCalled++
-          versionsDeleted.push(req.params.versionId as string)
-          return res(ctx.status(204))
+          versionsDeleted.push(params.versionId as string)
+          return new HttpResponse(null, {
+            status: 204
+          })
         }
       )
     )
@@ -471,22 +566,29 @@ describe('index tests -- call rest', () => {
     const versionsDeleted: string[] = []
 
     server.use(
-      rest.get(
+      http.get(
         'https://github.someghesinstance.com/api/v3/users/test-owner/packages/npm/test-package/versions',
-        async (req, res, ctx) => {
+        async () => {
           getApiCalled++
-          return res(ctx.status(200), ctx.json(versions))
+          return new HttpResponse(JSON.stringify(versions), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
         }
       )
     )
 
     server.use(
-      rest.delete(
+      http.delete(
         'https://github.someghesinstance.com/api/v3/users/test-owner/packages/npm/test-package/versions/:versionId',
-        async (req, res, ctx) => {
+        async ({params}) => {
           deleteApiCalled++
-          versionsDeleted.push(req.params.versionId as string)
-          return res(ctx.status(204))
+          versionsDeleted.push(params.versionId as string)
+          return new HttpResponse(null, {
+            status: 204
+          })
         }
       )
     )
