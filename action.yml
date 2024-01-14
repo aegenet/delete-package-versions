@@ -96,6 +96,12 @@ inputs:
       Does not actually delete data, allows for simulation only.
     required: false
     default: "false"
+
+  sleep-interval:
+    description: >
+      Sleep interval (ms) between deletion of versions per project (only when using package-names).
+    required: false
+    default: "15000"
 runs:
   using: node16
   main: dist/index.js

@@ -94,6 +94,9 @@ This is a fork of https://github.com/actions/delete-package-versions.
   # Defaults to false.
   simulate:
 
+  # Sleep interval (ms) between deletion of versions per project (only when using package-names)
+  # Defaults to 15000 (15 seconds).
+  sleep-interval:
 ```
 
 # Valid Input Combinations

@@ -3,9 +3,6 @@ import {context} from '@actions/github'
 import {Input} from './input'
 import {deleteVersions, sleep} from './delete'
 
-/** Don't flood github api */
-export const PACKAGE_SLEEP_MS = 15000
-
 function getActionInput(packageName: string): Input {
   const includeVersions = getInput('include-versions')
   const ignoreVersions = getInput('ignore-versions')
@@ -56,10 +53,17 @@ async function run(): Promise<void> {
       : []
 
     if (packageNames.length) {
+      const sleepIntervalStr = getInput('sleep-interval')
+      const sleepInterval = sleepIntervalStr
+        ? parseInt(sleepIntervalStr, 10)
+        : process.env.GH_DELETE_PACKAGE_VERSIONS_SLEEP
+          ? parseInt(process.env.GH_DELETE_PACKAGE_VERSIONS_SLEEP, 10)
+          : 15000
+
       for (let i = 0; i < packageNames.length; i++) {
         await deleteVersions(getActionInput(packageNames[i]))
         // Anti flood
-        sleep(PACKAGE_SLEEP_MS)
+        await sleep(sleepInterval)
       }
     } else if (packageName) {
       // Standard
