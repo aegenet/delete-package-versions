@@ -20,7 +20,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
 # Usage
 
 ```yaml
-- uses: aegenet/gh-delete-package-versions@v5.4.1
+- uses: aegenet/gh-delete-package-versions@v5.5.0
   with:
   # Can be a single package version id, or a comma separated list of package version ids.
   # Defaults to an empty string.
@@ -141,7 +141,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete all pre-release package versions except latest 10
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with: 
       package-name: 'test-package'
       package-type: 'npm'
@@ -155,7 +155,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete all pre-release package versions except latest 10 from a repo not having access to package
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with: 
       owner: 'github'
       package-name: 'test-package'
@@ -176,7 +176,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete all untagged versions except latest 10
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with: 
       package-name: 'test-package'
       package-type: 'container'
@@ -195,7 +195,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete all except latest 3 package versions excluding major versions as per semver
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with: 
       package-name: 'test-package'
       package-type: 'npm'
@@ -212,7 +212,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete all except latest 3 package versions excluding major versions as per semver from a repo not having access to package
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with: 
       owner: 'github'
       package-name: 'test-package'
@@ -235,7 +235,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete 3 oldest versions excluding major versions as per semver
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with: 
       package-name: 'test-package'
       package-type: 'npm'
@@ -252,7 +252,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete 3 oldest versions excluding major versions as per semver from a repo not having access to package
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with: 
       owner: 'github'
       package-name: 'test-package'
@@ -273,7 +273,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete all except latest 2 versions of a package hosted
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       package-name: 'test-package'
       package-type: 'npm'
@@ -289,7 +289,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete all except latest 2 versions of a package hosted from a repo not having access to package
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       owner: 'github'
       package-name: 'test-package'
@@ -309,7 +309,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete the oldest 3 version of a package hosted
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       package-name: 'test-package'
       package-type: 'npm'
@@ -325,7 +325,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   Delete the oldest 3 version of a package hosted from a repo not having access to package
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       owner: 'github'
       package-name: 'test-package'
@@ -343,7 +343,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   __Example__
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       package-name: 'test-package'
       package-type: 'npm'
@@ -354,7 +354,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   __Example__
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       owner: 'github'
       package-name: 'test-package'
@@ -373,7 +373,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   __Example__
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       package-version-ids: 'MDE0OlBhY2thZ2VWZXJzaW9uOTcyMDY3'
       package-name: 'test-package'
@@ -387,7 +387,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   __Example__
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       package-version-ids: 'MDE0OlBhY2thZ2VWZXJzaW9uOTcyMDY3'
       package-name: 'test-package'
@@ -406,7 +406,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   __Example__
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       package-version-ids: 'MDE0OlBhY2thZ2VWZXJzaW9uOTcyMDY3, MDE0OlBhY2thZ2VWZXJzaW9uOTcyMzQ5, MDE0OlBhY2thZ2VWZXJzaW9uOTcyMzUw'
       package-name: 'test-package'
@@ -420,7 +420,7 @@ This is a fork of https://github.com/actions/delete-package-versions.
   __Example__
 
   ```yaml
-  - uses: aegenet/gh-delete-package-versions@v5.4.1
+  - uses: aegenet/gh-delete-package-versions@v5.5.0
     with:
       package-version-ids: 'MDE0OlBhY2thZ2VWZXJzaW9uOTcyMDY3, MDE0OlBhY2thZ2VWZXJzaW9uOTcyMzQ5, MDE0OlBhY2thZ2VWZXJzaW9uOTcyMzUw'
       package-name: 'test-package'
